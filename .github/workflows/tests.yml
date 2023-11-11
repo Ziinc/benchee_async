@@ -1,0 +1,42 @@
+name: Elixir CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+
+
+jobs:
+  check:
+    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / ${{ matrix.cmd }}
+    strategy:
+      matrix:
+        otp: ['22', '23', '24', '25', '26']
+        elixir: ['1.10', '1.12', '1.13', '1.14', '1.15']
+        cmd: [test, test.format, test.compile, test.build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            logflare-ex/deps
+          key: mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: mix
+      - run: mix deps.get
+      - run: mix ${{ matrix.cmd }}
+

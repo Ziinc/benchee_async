@@ -184,9 +184,7 @@ case_slower        10.44 ms       11.69 ms            14311.02 ms, 11.04 ms, 11.
 
 ### Usage in a Real World Application
 
-It is advised to mock your async functions using [`:meck`](https://hexdocs.pm/meck/meck.html) or [`Mimic`](https://hexdocs.pm/mimic/Mimic.html). The mocked function would be where you trigger the reporting to the scenario that you are measuring.
-
-At the moment, hardcoding of the scenario name argument is required.
+It is advised to mock your async functions using [`:meck`](https://hexdocs.pm/meck/meck.html) or [`Mimic`](https://hexdocs.pm/mimic/Mimic.html). The mocked function would be where you trigger `BencheeAsync.Reporter.report/0`.
 
 ### Internals and Behavior
 
