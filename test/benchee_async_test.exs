@@ -87,7 +87,6 @@ defmodule BencheeAsyncTest do
         )
       end)
 
-    IO.puts(io)
     assert io =~ inspect(Reporter.get_samples("case_10_numbers") |> length())
     assert io =~ inspect(Reporter.get_samples("case_100_numbers") |> length())
   end
@@ -127,7 +126,6 @@ defmodule BencheeAsyncTest do
         )
       end)
 
-    IO.puts(io)
     assert io =~ inspect(Reporter.get_samples("case_faster", 10) |> length())
     assert io =~ inspect(Reporter.get_samples("case_faster", 50) |> length())
     assert io =~ inspect(Reporter.get_samples("case_faster", 75) |> length())
