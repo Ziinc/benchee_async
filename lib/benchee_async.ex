@@ -46,25 +46,52 @@ defmodule BencheeAsync do
       |> Benchee.init()
       |> Benchee.system()
       |> then(fn suite ->
-        Enum.reduce(config, suite, fn {k, v}, acc ->
-          # case v do
-          #   {func, local_hooks} when is_list(local_hooks) ->
-          #     local_bef_scenario = Keyword.get(local_hooks, :before_scenario)
+        Enum.reduce(config, suite, fn
+          {k, func}, acc when is_function(func) ->
+            before_scenario = fn input ->
+              Reporter.set_scenario(k, input)
+              input
+            end
 
-          #     local_bef_scenario = if local_bef_scenario do
-          #       new_bef_scenario = fn input ->
+            Benchee.benchmark(acc, k, {func, before_scenario: before_scenario})
 
-          #       end
-          #       {func, Keyword.put(:before_scenario, )}
+          {k, {func, opts}}, acc ->
+            user_local_bef_scenario = Keyword.get(opts, :before_scenario)
 
-          #     else
-          #       fn input  ->
-          #          Reporter.set_scenario(k)
-          #       end
-          #     end
-          #     {func, Keyword.put(:before_scenario, )}
-          # end
-          Benchee.benchmark(acc, k, v)
+            opts =
+              Keyword.put(opts, :before_scenario, fn input ->
+                Reporter.set_scenario(k, input)
+
+                if user_local_bef_scenario != nil do
+                  user_local_bef_scenario.(input)
+                else
+                  input
+                end
+              end)
+
+            Benchee.benchmark(acc, k, {func, opts})
+
+            # v = case v do
+            #   {func, local_hooks} when is_list(local_hooks) ->
+            #     user_local_bef_scenario = Keyword.get(local_hooks, :before_scenario)
+
+            #     local_bef_scenario = if user_local_bef_scenario do
+            #       new_bef_scenario = fn input ->
+
+            #       end
+            #       {func, Keyword.put(:before_scenario, )}
+
+            #     else
+            #       fn input  ->
+            #          Reporter.set_scenario(k)
+            #       end
+            #     end
+            #     {func, Keyword.put(:before_scenario, )}
+            #   _ ->
+            #     # v is function only
+            #     {k, {v, before_scenario: to_inject}}
+            # end
+            # Benchee.benchmark(acc, k, v)
         end)
       end)
       |> then(fn suite ->
@@ -80,7 +107,7 @@ defmodule BencheeAsync do
         updated_scenarios =
           for scenario <- suite.scenarios,
               run_time_data = scenario.run_time_data do
-            samples = Reporter.get_samples(scenario.name)
+            samples = Reporter.get_samples(scenario.name, scenario.input)
 
             %{scenario | run_time_data: Map.put(run_time_data, :samples, samples)}
           end

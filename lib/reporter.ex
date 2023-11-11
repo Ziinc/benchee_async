@@ -27,12 +27,16 @@ defmodule BencheeAsync.Reporter do
     GenServer.call(__MODULE__, {:ignore_ms, ms})
   end
 
-  def record(scenario_name) do
-    GenServer.cast(__MODULE__, {:record, scenario_name})
+  def set_scenario(scenario_name, input \\ :__no_input) when is_binary(scenario_name) do
+    GenServer.cast(__MODULE__, {:set_scenario, scenario_name, :erlang.phash2(input)})
   end
 
-  def get_samples(scenario_name) do
-    GenServer.call(__MODULE__, {:samples, scenario_name})
+  def record() do
+    GenServer.cast(__MODULE__, :record)
+  end
+
+  def get_samples(scenario_name, input \\ :__no_input) when is_binary(scenario_name) do
+    GenServer.call(__MODULE__, {:samples, scenario_name, :erlang.phash2(input)})
   end
 
   def clear() do
@@ -45,8 +49,8 @@ defmodule BencheeAsync.Reporter do
   end
 
   @impl GenServer
-  def handle_call({:samples, scenario_name}, _caller, state) do
-    {:reply, Map.get(state.samples, scenario_name, []), state}
+  def handle_call({:samples, scenario_name, hash}, _caller, state) do
+    {:reply, Map.get(state.samples, {scenario_name, hash}, []), state}
   end
 
   @impl GenServer
@@ -82,16 +86,16 @@ defmodule BencheeAsync.Reporter do
   end
 
   @impl GenServer
-  def handle_cast({:record, _scenario_name}, %{ignoring?: true} = state),
+  def handle_cast(:record, %{ignoring?: true} = state),
     do: {:noreply, state}
 
   @impl GenServer
-  def handle_cast({:record, scenario_name}, state) do
+  def handle_cast(:record, state) do
     now = current_time()
     diff = now - state.start_time
 
     samples =
-      Map.update(state.samples, scenario_name, [diff], fn prev ->
+      Map.update(state.samples, state.current_key, [diff], fn prev ->
         [diff | prev]
       end)
 
@@ -103,9 +107,20 @@ defmodule BencheeAsync.Reporter do
     {:noreply, %{state | start_time: current_time()}}
   end
 
+  @impl GenServer
+  def handle_cast({:set_scenario, scenario_name, hash}, state) do
+    {:noreply, %{state | current_key: {scenario_name, hash}}}
+  end
+
   defp current_time, do: :erlang.system_time(:nano_seconds)
 
   defp init_state do
-    %{start_time: current_time(), samples: %{}, ignoring?: false, ignore_until: nil}
+    %{
+      start_time: current_time(),
+      samples: %{},
+      current_key: nil,
+      ignoring?: false,
+      ignore_until: nil
+    }
   end
 end

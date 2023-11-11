@@ -17,8 +17,7 @@ defmodule BencheeAsyncTest do
                  "case_10_numbers" => fn ->
                    Task.start(fn ->
                      :timer.sleep(500)
-                     Reporter.record("case_10_numbers")
-                     # Reporter.record()
+                     Reporter.record()
                    end)
 
                    :timer.sleep(500)
@@ -39,17 +38,12 @@ defmodule BencheeAsyncTest do
             "case_10_numbers" => fn ->
               Task.start(fn ->
                 :timer.sleep(500)
-                Reporter.record("case_10_numbers")
+                Reporter.record()
               end)
 
               :timer.sleep(500)
             end
           },
-          # inputs: %{
-          #   "Small" => Enum.to_list(1..1_000),
-          #   "Medium" => Enum.to_list(1..10_000),
-          #   "Bigger" => Enum.to_list(1..100_000)
-          # },
           time: 1,
           warmup: 0
         )
@@ -69,8 +63,7 @@ defmodule BencheeAsyncTest do
             "case_10_numbers" => fn ->
               Task.start(fn ->
                 :timer.sleep(100)
-                Reporter.record("case_10_numbers")
-                # Reporter.record()
+                Reporter.record()
               end)
 
               assert Reporter.get_samples("case_10_numbers") |> length() < 3
@@ -80,8 +73,7 @@ defmodule BencheeAsyncTest do
             "case_100_numbers" => fn ->
               Task.start(fn ->
                 :timer.sleep(1000)
-                Reporter.record("case_100_numbers")
-                # Reporter.record()
+                Reporter.record()
               end)
 
               assert Reporter.get_samples("case_10_numbers") |> length() < 3
@@ -98,5 +90,49 @@ defmodule BencheeAsyncTest do
     IO.puts(io)
     assert io =~ inspect(Reporter.get_samples("case_10_numbers") |> length())
     assert io =~ inspect(Reporter.get_samples("case_100_numbers") |> length())
+  end
+
+  test "with inputs" do
+    start_supervised!(Reporter)
+
+    io =
+      capture_io(fn ->
+        BencheeAsync.run(
+          %{
+            "case_faster" => fn input ->
+              Task.start(fn ->
+                :timer.sleep(input)
+                Reporter.record()
+              end)
+
+              :timer.sleep(input)
+            end,
+            "case_slower" => fn input ->
+              Task.start(fn ->
+                :timer.sleep(input)
+                Reporter.record()
+              end)
+
+              :timer.sleep(input * 2)
+            end
+          },
+          time: 3,
+          warmup: 0,
+          inputs: %{
+            "Small" => 10,
+            "Medium" => 50,
+            "Bigger" => 75
+          },
+          formatters: [{Benchee.Formatters.Console, extended_statistics: true}]
+        )
+      end)
+
+    IO.puts(io)
+    assert io =~ inspect(Reporter.get_samples("case_faster", 10) |> length())
+    assert io =~ inspect(Reporter.get_samples("case_faster", 50) |> length())
+    assert io =~ inspect(Reporter.get_samples("case_faster", 75) |> length())
+    assert io =~ inspect(Reporter.get_samples("case_slower", 10) |> length())
+    assert io =~ inspect(Reporter.get_samples("case_slower", 50) |> length())
+    assert io =~ inspect(Reporter.get_samples("case_slower", 75) |> length())
   end
 end
