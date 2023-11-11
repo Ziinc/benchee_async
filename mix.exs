@@ -16,7 +16,7 @@ defmodule BencheeAsync.MixProject do
         "test.format": :test,
         "test.compile": :test
       ],
-      package: package(),
+      package: package()
     ]
   end
 
