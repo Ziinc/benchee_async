@@ -1,14 +1,17 @@
 # BencheeAsync
 
-Async work `Benchee` plugin for benchmarking multi-process performance.
+`Benchee` plugin for benchmarking multi-process performance for async work.
 
-Often, one needs to optimize certain parts of a system that are spread out over multiple processes, pipelines, gen_stages, etc. However, Benchee only allows us to benchmark and measure the performance of a singular function within a singular executing process. It cannot keept track cross-process work performed. This plugin allows us to measure async units of work done, thereby allowing us to optimize our async pipelines.
+This plugin allows optimization of systems that are spread out over multiple processes. Benchee only allows benchmarking of a singular function within a singular executing process, and cannot keep track of cross-process work performed. **This plugin allows us to measure async units of work done, thereby allowing us to optimize our async pipelines.**
+
+The goal of this library is to **approximately** track units of async work done and the rate of completion.
 
 ## Installation
 
 ```elixir
 def deps do
   [
+    # benchee is used internally
     {:benchee, "~> 1.0", only: [:dev, :test]},
     {:benchee_async, "~> 0.1.0", only: [:dev, :test]}
   ]
@@ -16,7 +19,6 @@ end
 ```
 
 ## Usage
-The goal of this library is to be able to **approximately** track the amount of work done, rate of async work completion, as well as time taken to accomplish said async work.
 
 The following **must be configured**:
 
@@ -31,7 +33,7 @@ This shows an example of running Benchee from within a ExUnit test suite.
 ```elixir
 defmodule MyAppTest do
   use ExUnit.Case, async: false
-  
+
   test "measure async work!" do
     # start the reporter process
     start_supervised!(BencheeAsync.Reporter)
@@ -106,7 +108,6 @@ Interpretation differences from `Benchee` are as follows:
 - `average`, `deviation`, `median`, `99th %`: The statistics of execution time between each reported unit work done.
 - `sample size`: The amount of reported units of work done, which will correspond to the number of `BencheeAsync.Reporter.report/1` calls.
 
-
 ### Usage with Inputs
 
 Inputs work as well with no additional configuration needed.
@@ -140,11 +141,11 @@ Name                  ips        average  deviation         median         99th 
 case_faster        1.08 M     0.00092 ms    ±36.87%     0.00092 ms     0.00154 ms
 case_slower     0.00001 M       75.90 ms     ±0.22%       75.94 ms       76.03 ms
 
-Comparison: 
+Comparison:
 case_faster        1.08 M
 case_slower     0.00001 M - 82215.44x slower +75.90 ms
 
-Extended statistics: 
+Extended statistics:
 
 Name                minimum        maximum    sample size                     mode
 case_faster      0.00013 ms     0.00154 ms             39               0.00088 ms
@@ -155,11 +156,11 @@ Name                  ips        average  deviation         median         99th 
 case_faster      982.25 K     0.00102 ms   ±151.32%     0.00083 ms      0.0123 ms
 case_slower      0.0196 K       51.04 ms     ±0.76%       51.00 ms       52.96 ms
 
-Comparison: 
+Comparison:
 case_faster      982.25 K
 case_slower      0.0196 K - 50138.38x slower +51.04 ms
 
-Extended statistics: 
+Extended statistics:
 
 Name                minimum        maximum    sample size                     mode
 case_faster      0.00013 ms      0.0123 ms             58               0.00075 ms
@@ -170,11 +171,11 @@ Name                  ips        average  deviation         median         99th 
 case_faster        1.68 M     0.00059 ms    ±38.29%     0.00058 ms     0.00108 ms
 case_slower     0.00009 M       11.00 ms     ±1.08%       11.01 ms       11.61 ms
 
-Comparison: 
+Comparison:
 case_faster        1.68 M
 case_slower     0.00009 M - 18489.07x slower +11.00 ms
 
-Extended statistics: 
+Extended statistics:
 
 Name                minimum        maximum    sample size                     mode
 case_faster      0.00013 ms     0.00275 ms            272               0.00063 ms
@@ -199,4 +200,4 @@ To allow `BencheeAsync.Reporter.record/0` to work without specifying scenario na
 
 ### Limitations
 
-- The `memory_time` will extend the execution, hence the sample size will include counts during this time.
+The `memory_time` and `reduction_time` Benchee options will extend the execution time, hence the sample size will include counts beyond set run time value.
