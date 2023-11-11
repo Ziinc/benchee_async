@@ -12,8 +12,11 @@ defmodule BencheeAsync.MixProject do
       aliases: aliases(),
       deps: deps(),
       preferred_cli_env: [
-        "test.watch": :test
-      ]
+        "test.watch": :test,
+        "test.format": :test,
+        "test.compile": :test
+      ],
+      package: package(),
     ]
   end
 
