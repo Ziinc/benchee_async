@@ -40,7 +40,6 @@ defmodule BencheeAsync.MixProject do
     ]
   end
 
-
   defp package() do
     [
       description: "Benchee Async plugin for measuring multi-process performance",
