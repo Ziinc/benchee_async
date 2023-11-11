@@ -11,11 +11,9 @@ on:
 
 jobs:
   check:
-    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / ${{ matrix.cmd }}
+    name: CI Checks
     strategy:
       matrix:
-        otp: ['24', '25', '26']
-        elixir: ['1.12', '1.13', '1.14', '1.15']
         cmd: [test, test.format, test.compile, test.build]
     runs-on: ubuntu-latest
     steps:
@@ -25,11 +23,6 @@ jobs:
         with:
           version-file: .tool-versions
           version-type: strict
-
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
       - name: Restore dependencies cache
         uses: actions/cache@v3
         with:
