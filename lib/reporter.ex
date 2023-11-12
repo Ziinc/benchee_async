@@ -11,38 +11,54 @@ defmodule BencheeAsync.Reporter do
     {:ok, init_state()}
   end
 
+  @doc false
   def reset_timer() do
     GenServer.cast(__MODULE__, :reset_timer)
   end
 
+  @doc false
   def maybe_enable() do
     GenServer.cast(__MODULE__, :maybe_enable)
   end
 
+  @doc false
   def disable() do
     GenServer.call(__MODULE__, :disable)
   end
 
+  @doc false
   def ignore_ms(ms) when is_number(ms) do
     GenServer.call(__MODULE__, {:ignore_ms, ms})
   end
 
+  @doc false
   def set_scenario(scenario_name, input \\ :__no_input) when is_binary(scenario_name) do
     GenServer.cast(__MODULE__, {:set_scenario, scenario_name, :erlang.phash2(input)})
   end
 
+  @doc """
+  Records a unit of work done. Should be called each time a unit of work is performed. 
+  
+  It is advised to mock the function that you wish to track and call this function within the mock. 
+  """
   def record() do
     GenServer.cast(__MODULE__, :record)
   end
 
+  @doc """
+  Retrieves the samples recorded for a given scenario and input combination. 
+  """
   def get_samples(scenario_name, input \\ :__no_input) when is_binary(scenario_name) do
     GenServer.call(__MODULE__, {:samples, scenario_name, :erlang.phash2(input)})
   end
 
+  @doc false
   def clear() do
     GenServer.call(__MODULE__, :clear)
   end
 
+
+  # GenServer
   @impl GenServer
   def handle_call({:set_pid, pid}, _caller, state) when is_pid(pid) do
     {:reply, :ok, %{state | current_pid: pid}}
