@@ -29,29 +29,31 @@ defmodule BencheeAsync do
       |> Keyword.put(:before_each, fn input ->
         Reporter.maybe_enable()
 
-        if user_bef_each != nil do
-          user_bef_each.(input)
-        end
+        new_input =
+          if user_bef_each != nil do
+            user_bef_each.(input)
+          else
+            input
+          end
 
         Reporter.reset_timer()
-
-        input
+        new_input
       end)
       |> Keyword.put(:before_scenario, fn input ->
         if user_bef_scenario_hook != nil do
           user_bef_scenario_hook.(input)
+        else
+          input
         end
-
-        input
       end)
       |> Keyword.put(:after_scenario, fn input ->
         Reporter.disable()
 
         if user_aft_scenario_hook != nil do
           user_aft_scenario_hook.(input)
+        else
+          input
         end
-
-        input
       end)
 
     suite =
@@ -83,28 +85,6 @@ defmodule BencheeAsync do
               end)
 
             Benchee.benchmark(acc, k, {func, opts})
-
-            # v = case v do
-            #   {func, local_hooks} when is_list(local_hooks) ->
-            #     user_local_bef_scenario = Keyword.get(local_hooks, :before_scenario)
-
-            #     local_bef_scenario = if user_local_bef_scenario do
-            #       new_bef_scenario = fn input ->
-
-            #       end
-            #       {func, Keyword.put(:before_scenario, )}
-
-            #     else
-            #       fn input  ->
-            #          Reporter.set_scenario(k)
-            #       end
-            #     end
-            #     {func, Keyword.put(:before_scenario, )}
-            #   _ ->
-            #     # v is function only
-            #     {k, {v, before_scenario: to_inject}}
-            # end
-            # Benchee.benchmark(acc, k, v)
         end)
       end)
       |> then(fn suite ->
