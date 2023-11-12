@@ -4,6 +4,19 @@ defmodule BencheeAsync do
   """
   alias BencheeAsync.Reporter
 
+  @doc """
+  Runs the benchmark jobs as per the Benchee-compatible configuration.
+
+  Full list of configuration can be found in the [documentation for Benchee](https://hexdocs.pm/benchee/readme.html#configuration).
+
+  ### Internals
+  This function will inject Reporter lifecycle hooks into each bencahmark job. These hooks will be executed **before** the user provided hooks.
+  The only exception to this is where the timer reset is performed after the user's `:before_each` global hook is run.
+
+  The `BencheeAsync.Reporter` will immediately start tracking work completion on warmup end, and on job completion (where the `:after_scenario` hook is run).
+  This means that any configuration option that extends measurement times (such as `:memory_time`) will result in tracking occuring beyond the `:time` configured.
+  """
+  @spec run(map(), keyword()) :: Benchee.Suite.t()
   def run(config, opts \\ []) do
     Reporter.clear()
     user_bef_scenario_hook = Keyword.get(opts, :before_scenario)
@@ -16,29 +29,31 @@ defmodule BencheeAsync do
       |> Keyword.put(:before_each, fn input ->
         Reporter.maybe_enable()
 
-        if user_bef_each != nil do
-          user_bef_each.(input)
-        end
+        new_input =
+          if user_bef_each != nil do
+            user_bef_each.(input)
+          else
+            input
+          end
 
         Reporter.reset_timer()
-
-        input
+        new_input
       end)
       |> Keyword.put(:before_scenario, fn input ->
         if user_bef_scenario_hook != nil do
           user_bef_scenario_hook.(input)
+        else
+          input
         end
-
-        input
       end)
       |> Keyword.put(:after_scenario, fn input ->
         Reporter.disable()
 
         if user_aft_scenario_hook != nil do
           user_aft_scenario_hook.(input)
+        else
+          input
         end
-
-        input
       end)
 
     suite =
@@ -70,28 +85,6 @@ defmodule BencheeAsync do
               end)
 
             Benchee.benchmark(acc, k, {func, opts})
-
-            # v = case v do
-            #   {func, local_hooks} when is_list(local_hooks) ->
-            #     user_local_bef_scenario = Keyword.get(local_hooks, :before_scenario)
-
-            #     local_bef_scenario = if user_local_bef_scenario do
-            #       new_bef_scenario = fn input ->
-
-            #       end
-            #       {func, Keyword.put(:before_scenario, )}
-
-            #     else
-            #       fn input  ->
-            #          Reporter.set_scenario(k)
-            #       end
-            #     end
-            #     {func, Keyword.put(:before_scenario, )}
-            #   _ ->
-            #     # v is function only
-            #     {k, {v, before_scenario: to_inject}}
-            # end
-            # Benchee.benchmark(acc, k, v)
         end)
       end)
       |> then(fn suite ->

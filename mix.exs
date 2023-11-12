@@ -3,6 +3,9 @@ defmodule BencheeAsync.MixProject do
 
   @prerelease System.get_env("PRERELEASE_VERSION")
   @version_suffix if(@prerelease, do: "-#{@prerelease}", else: "")
+  @gh_url "https://github.com/Ziinc/benchee_async"
+  @lib_name "BencheeAsync"
+
   def project do
     [
       app: :benchee_async,
@@ -16,7 +19,10 @@ defmodule BencheeAsync.MixProject do
         "test.format": :test,
         "test.compile": :test
       ],
-      package: package()
+      package: package(),
+      name: @lib_name,
+      source_url: @gh_url,
+      docs: [main: @lib_name, extras: ["README.md"]]
     ]
   end
 
@@ -48,7 +54,7 @@ defmodule BencheeAsync.MixProject do
     [
       description: "Benchee Async plugin for measuring multi-process performance",
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/Ziinc/benchee_async"}
+      links: %{"GitHub" => @gh_url}
     ]
   end
 end
