@@ -4,6 +4,19 @@ defmodule BencheeAsync do
   """
   alias BencheeAsync.Reporter
 
+  @doc """
+  Runs the benchmark jobs as per the Benchee-compatible configuration.
+
+  Full list of configuration can be found in the [documentation for Benchee](https://hexdocs.pm/benchee/readme.html#configuration).
+
+  ### Internals
+  This function will inject Reporter lifecycle hooks into each bencahmark job. These hooks will be executed **before** the user provided hooks.
+  The only exception to this is where the timer reset is performed after the user's `:before_each` global hook is run.
+
+  The `BencheeAsync.Reporter` will immediately start tracking work completion on warmup end, and on job completion (where the `:after_scenario` hook is run).
+  This means that any configuration option that extends measurement times (such as `:memory_time`) will result in tracking occuring beyond the `:time` configured.
+  """
+  @spec run(map(), keyword()) :: Benchee.Suite.t()
   def run(config, opts \\ []) do
     Reporter.clear()
     user_bef_scenario_hook = Keyword.get(opts, :before_scenario)
