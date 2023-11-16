@@ -85,8 +85,19 @@ defmodule BencheeAsync.Reporter do
   Records a unit of work done. Should be called each time a unit of work is performed.
 
   It is advised to mock the function that you wish to track and call this function within the mock.
+
+  ### Example
+
+  ```elixir
+  # record 1 unit of work
+  BencheeAsync.Reporter.record()
+
+  # record 5 units of work
+  BencheeAsync.Reporter.record(5)
+  ```
   """
   @spec record() :: :ok
+  @spec record(non_neg_integer()) :: :ok
   def record(n \\ 1) do
     GenServer.cast(__MODULE__, {:record, n})
   end
