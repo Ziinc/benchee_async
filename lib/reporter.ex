@@ -87,8 +87,8 @@ defmodule BencheeAsync.Reporter do
   It is advised to mock the function that you wish to track and call this function within the mock.
   """
   @spec record() :: :ok
-  def record() do
-    GenServer.cast(__MODULE__, :record)
+  def record(n \\ 1) do
+    GenServer.cast(__MODULE__, {:record, n})
   end
 
   @doc """
@@ -161,17 +161,17 @@ defmodule BencheeAsync.Reporter do
   end
 
   @impl GenServer
-  def handle_cast(:record, %{ignoring?: true} = state),
+  def handle_cast({:record, _}, %{ignoring?: true} = state),
     do: {:noreply, state}
 
   @impl GenServer
-  def handle_cast(:record, state) do
+  def handle_cast({:record, n}, state) do
     now = current_time()
     diff = now - state.start_time
 
     samples =
       Map.update(state.samples, state.current_key, [diff], fn prev ->
-        [diff | prev]
+        List.duplicate(diff, n) ++ prev
       end)
 
     {:noreply, %{state | samples: samples, start_time: now}}
