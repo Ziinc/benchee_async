@@ -9,7 +9,7 @@ defmodule BencheeAsync.MixProject do
   def project do
     [
       app: :benchee_async,
-      version: "0.1.1#{@version_suffix}",
+      version: "0.1.2#{@version_suffix}",
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),

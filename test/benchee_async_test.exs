@@ -109,7 +109,7 @@ defmodule BencheeAsyncTest do
             "case_slower" => fn input ->
               Task.start(fn ->
                 :timer.sleep(input)
-                Reporter.record()
+                Reporter.record(4)
               end)
 
               :timer.sleep(input * 2)
