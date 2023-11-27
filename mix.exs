@@ -1,7 +1,7 @@
 defmodule BencheeAsync.MixProject do
   use Mix.Project
 
-  @prerelease System.get_env("PRERELEASE_VERSION")
+  @prerelease System.get_env("BENCHEE_ASYNC_PRERELEASE_VERSION")
   @version_suffix if(@prerelease, do: "-#{@prerelease}", else: "")
   @gh_url "https://github.com/Ziinc/benchee_async"
   @lib_name "BencheeAsync"

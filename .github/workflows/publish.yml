@@ -30,7 +30,7 @@ jobs:
         if: github.event_name == 'push'
         env:
           HEX_API_KEY: ${{ secrets.HEX_AUTH_TOKEN }}
-          PRERELEASE_VERSION: dev-${{ env.short_sha }}
+          BENCHEE_ASYNC_PRERELEASE_VERSION: dev.${{ env.short_sha }}
       - run: mix hex.publish --yes
         if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         env:
